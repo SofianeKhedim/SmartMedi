@@ -39,3 +39,6 @@ yarn-error.*
 
 # Playwright MCP artifacts
 .playwright-mcp/
+
+# debug logs
+console54.txt

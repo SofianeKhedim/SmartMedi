@@ -13,7 +13,7 @@ import {
   TextInput,
   ActivityIndicator,
 } from 'react-native';
-import FeatherIcon from 'react-native-vector-icons/Feather';
+import FeatherIcon from '@expo/vector-icons/Feather';
 import { useApp } from '../context/AppContext';
 import { lightTheme, darkTheme } from '../constants/Colors';
 import NotificationService from '../services/NotificationService';
@@ -58,7 +58,7 @@ export default function UserProfile() {
     { label: 'Pression Diastolique', value: vitals.diastolic, icon: 'arrow-down' },
     { label: 'Fréquence Cardiaque', value: vitals.pulse, icon: 'heart' },
     { label: 'Dernière Mesure', value: vitals.lastMeasure, icon: 'clock' },
-  ];
+  ] as const;
   
   const recommendations = [
     '💧 Restez hydraté - 1,5L d\'eau par jour',

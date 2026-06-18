@@ -1,6 +1,7 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
+// SDK 54 moved the classic file API (documentDirectory, moveAsync) to /legacy.
+import * as FileSystem from 'expo-file-system/legacy';
 import { BloodPressureMeasurement, UserProfile } from '../context/AppContext';
 
 class ExportService {

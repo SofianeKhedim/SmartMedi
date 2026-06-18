@@ -22,9 +22,11 @@
 
 ### Prérequis
 
-- **Node.js 18 ou 20 LTS** (recommandé) et **npm**
-- L'application **Expo Go** sur votre téléphone (iOS/Android), ou un émulateur
+- **Node.js 20 LTS** (recommandé) et **npm**
+- L'application **Expo Go** sur votre téléphone (iOS/Android), ou un émulateur/simulateur
 - *(Optionnel)* une clé API **Google Gemini** pour activer l'assistant IA (voir plus bas)
+
+> ℹ️ Ce projet utilise **Expo SDK 54**. Sur un téléphone, **Expo Go doit être en SDK 54** (la dernière version du store) — sinon il refusera d'ouvrir le projet.
 
 ### Étapes
 
@@ -44,14 +46,33 @@ cp .env.example .env
 npm start
 ```
 
-Au lancement de `npm start`, Expo affiche un **QR code** :
+Au lancement de `npm start`, Expo ouvre le **Metro Bundler** et affiche un **QR code** + un menu de raccourcis.
 
-- 📱 **Téléphone** : scannez-le avec l'application **Expo Go**
-- 🤖 **Android** : touche `a` (émulateur Android)
-- 🍎 **iOS** : touche `i` (simulateur iOS, macOS uniquement)
-- 🌐 **Web** : touche `w` (ouvre la version navigateur)
+### 📱 Lancer sur un téléphone physique (recommandé)
+
+1. Installez **Expo Go** sur votre téléphone :
+   - **iOS** → [App Store](https://apps.apple.com/app/expo-go/id982107779)
+   - **Android** → [Google Play](https://play.google.com/store/apps/details?id=host.exp.exponent)
+2. Branchez le téléphone et l'ordinateur sur le **même réseau Wi-Fi**.
+3. Lancez `npm start` sur l'ordinateur.
+4. Scannez le **QR code** :
+   - **iPhone** → avec l'app **Appareil photo** (une notification propose d'ouvrir dans Expo Go)
+   - **Android** → avec le bouton **« Scan QR code »** dans l'app Expo Go
+5. L'appli se charge et se **recharge automatiquement** à chaque modification du code.
+
+> 💡 Si le QR ne marche pas (réseaux séparés, Wi-Fi public), lancez en mode tunnel : `npx expo start --tunnel`.
+
+### 💻 Lancer sur un émulateur / le web
+
+Depuis le terminal où tourne `npm start`, appuyez sur :
+
+- **`a`** → émulateur **Android** (Android Studio requis)
+- **`i`** → simulateur **iOS** (macOS + Xcode requis)
+- **`w`** → version **navigateur web** (la plus rapide pour un test)
 
 > 💡 **Connexion** — l'authentification est une **démo** : n'importe quel email et mot de passe fonctionnent (aucun serveur d'authentification).
+
+> 📈 **Astuce graphique** — à la première ouverture, l'accueil affiche « Aucune mesure ». Ajoutez **plusieurs mesures** (onglet **Mesurer**) pour que la **courbe de tension** s'affiche correctement : comptez au moins **3 à 5 mesures** pour une tendance lisible.
 
 ---
 
@@ -115,9 +136,9 @@ SmartMedi/
 
 | Domaine | Outils |
 |---|---|
-| **Framework** | React Native 0.74 · Expo SDK 51 · TypeScript |
+| **Framework** | React Native 0.81 · Expo SDK 54 · React 19 · TypeScript |
 | **Navigation** | React Navigation 6 (stack + bottom tabs) |
-| **UI** | React Native Paper · Chart Kit · Gifted Chat · Feather Icons |
+| **UI** | Chart Kit · Gifted Chat · @expo/vector-icons · Reanimated 4 |
 | **Données** | AsyncStorage (stockage local clé-valeur) |
 | **IA** | Google Gemini (`gemini-2.5-flash`) |
 | **Système** | Expo Notifications · Expo Print & Sharing |

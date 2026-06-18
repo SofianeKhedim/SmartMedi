@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, TouchableOpacity, TextInput, Alert, Modal, StyleSheet } from 'react-native';
 import { GiftedChat, Bubble, InputToolbar, Send } from 'react-native-gifted-chat';
-import FeatherIcon from 'react-native-vector-icons/Feather';
+import FeatherIcon from '@expo/vector-icons/Feather';
 import { useApp } from '../context/AppContext';
 import { lightTheme, darkTheme } from '../constants/Colors';
 import ChatbotService from '../services/ChatbotService';

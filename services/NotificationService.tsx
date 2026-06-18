@@ -3,7 +3,9 @@ import { Platform } from 'react-native';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    // SDK 53+ replaced shouldShowAlert with shouldShowBanner/shouldShowList
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),
@@ -32,13 +34,16 @@ class NotificationService {
   }
 
   async scheduleMedicationReminder(medicationName: string, time: Date, recurring: boolean = true) {
-    const trigger = recurring 
+    const trigger: Notifications.NotificationTriggerInput = recurring
       ? {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
           hour: time.getHours(),
           minute: time.getMinutes(),
-          repeats: true,
         }
-      : time;
+      : {
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
+          date: time,
+        };
 
     await Notifications.scheduleNotificationAsync({
       content: {
@@ -58,9 +63,9 @@ class NotificationService {
         sound: 'default',
       },
       trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
         hour: time.getHours(),
         minute: time.getMinutes(),
-        repeats: true,
       },
     });
   }

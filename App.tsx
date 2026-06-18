@@ -1,8 +1,9 @@
+import 'react-native-get-random-values'; // polyfill crypto for gifted-chat UUIDs (native)
 import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
-import FeatherIcon from 'react-native-vector-icons/Feather';
+import FeatherIcon from '@expo/vector-icons/Feather';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View } from 'react-native';
 
@@ -37,7 +38,7 @@ const MainTabs = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
-          let iconName: string;
+          let iconName: React.ComponentProps<typeof FeatherIcon>['name'];
 
           switch (route.name) {
             case 'Accueil':

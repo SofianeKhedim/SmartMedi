@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import FeatherIcon from 'react-native-vector-icons/Feather';
+import FeatherIcon from '@expo/vector-icons/Feather';
 import { useApp } from '../context/AppContext';
 import { lightTheme, darkTheme } from '../constants/Colors';
 import ExportService from '../services/ExportService';
