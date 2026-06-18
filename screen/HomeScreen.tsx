@@ -1,175 +1,222 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   SafeAreaView,
   View,
   Text,
   TouchableOpacity,
-  TextInput,
   Image,
+  Switch,
+  Alert,
+  ScrollView,
 } from 'react-native';
 import FeatherIcon from 'react-native-vector-icons/Feather';
-import { LineChart } from 'react-native-chart-kit'; // Bibliothèque pour le graphique
+import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
+import { useApp } from '../context/AppContext';
+import { lightTheme, darkTheme } from '../constants/Colors';
+import ExportService from '../services/ExportService';
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen() {
+  const { isDarkMode, toggleTheme, measurements, userProfile } = useApp();
+  const theme = isDarkMode ? darkTheme : lightTheme;
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportData = async () => {
+    if (measurements.length === 0) {
+      Alert.alert('Aucune donnée', 'Vous n\'avez pas encore de mesures à exporter.');
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      await ExportService.exportToPDF(measurements, userProfile);
+      Alert.alert('Export réussi', 'Votre rapport a été généré et peut être partagé.');
+    } catch (error) {
+      Alert.alert('Erreur', 'Impossible de générer le rapport.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const getChartData = () => {
+    const recentMeasurements = measurements.slice(0, 7).reverse();
+    return {
+      labels: recentMeasurements.map(m => {
+        const date = new Date(m.date);
+        return date.toLocaleDateString('fr-FR', { weekday: 'short' });
+      }),
+      datasets: [{ data: recentMeasurements.map(m => m.systolic) }]
+    };
+  };
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-      <View style={styles.container}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+      <ScrollView 
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.container}>
 
-        {/* Boutons pour le chatbot et la déconnexion */}
+        {/* Header avec boutons d'action */}
         <View style={styles.actionWrapper}>
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate('Chatbot'); // Navigation vers le Chatbot
-            }}
-            style={{ marginRight: 'auto' }}>
-            <View style={styles.action}>
-              <FeatherIcon
-                color="#6a99e3"
-                name="message-circle"
-                size={22}
-              />
-            </View>
-          </TouchableOpacity>
+          <View style={styles.leftActions}>
+            <TouchableOpacity onPress={handleExportData} disabled={isExporting}>
+              <View style={[styles.action, { backgroundColor: theme.surface }]}>
+                <FeatherIcon
+                  color={theme.primary}
+                  name={isExporting ? 'loader' : 'download'}
+                  size={22}
+                />
+              </View>
+            </TouchableOpacity>
+          </View>
 
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Login')}>
-            <View style={styles.action}>
-              <FeatherIcon
-                color="#6a99e3"
-                name="log-in"
-                size={22}
+          <View style={styles.rightActions}>
+            <View style={styles.themeToggle}>
+              <FeatherIcon name="sun" size={18} color={theme.textSecondary} />
+              <Switch
+                value={isDarkMode}
+                onValueChange={toggleTheme}
+                thumbColor={theme.primary}
+                trackColor={{ false: theme.border, true: theme.primary }}
+                style={{ marginHorizontal: 8 }}
               />
+              <FeatherIcon name="moon" size={18} color={theme.textSecondary} />
             </View>
-          </TouchableOpacity>
+          </View>
         </View>
 
         {/* Logo de l'application */}
         <View style={styles.logoContainer}>
           <Image
-            source={require('C:/Users/niang/Documents/EPSI-20240610T095719Z-001/EPSI/smartmedi/smartmedi/assets/logo_smart.png')} // Remplace par le chemin du logo de ton application
+            source={require('../assets/logo_smart.png')} 
             style={styles.logo}
           />
         </View>
 
-        {/* Barre de recherche */}
-        <View style={styles.search}>
-          <View style={styles.searchInput}>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                placeholder="Entrez votre code de suivi"
-                placeholderTextColor="#9eadba"
-                style={styles.input}
-              />
-              <View style={styles.inputIcon}>
-                <FeatherIcon color="#9eadba" name="box" size={16} />
-              </View>
-            </View>
-          </View>
-          <TouchableOpacity
-            onPress={() => {
-              // Handle onPress for submitting tracking code
-            }}>
-            <View style={styles.btn}>
-              <Text style={styles.btnText}>Soumettre</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-
         {/* Graphique de la tension artérielle */}
-        <View style={styles.graphContainer}>
-          <Text style={styles.graphTitle}>Historique de la Tension Artérielle</Text>
-          <LineChart
-            data={{
-              labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'],
-              datasets: [
-                {
-                  data: [120, 125, 130, 128, 135], // Valeurs de la tension artérielle systolique
+        <View style={[styles.graphContainer, {
+          backgroundColor: theme.surface,
+          borderColor: theme.border
+        }]}>
+          <Text style={[styles.graphTitle, { color: theme.accent }]}>
+            Historique de la Tension Artérielle
+          </Text>
+          {measurements.length > 0 ? (
+            <LineChart
+              data={getChartData()}
+              width={Dimensions.get('window').width - 40}
+              height={220}
+              chartConfig={{
+                backgroundColor: theme.surface,
+                backgroundGradientFrom: theme.surface,
+                backgroundGradientTo: theme.surface,
+                decimalPlaces: 0,
+                color: (opacity = 1) => {
+                  const hex = theme.primary.replace('#', '');
+                  const r = parseInt(hex.substr(0, 2), 16);
+                  const g = parseInt(hex.substr(2, 2), 16);
+                  const b = parseInt(hex.substr(4, 2), 16);
+                  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
                 },
-              ],
-            }}
-            width={Dimensions.get('window').width - 40} // Largeur du graphique
-            height={220}
-            chartConfig={{
-              backgroundColor: '#f9f9f9',
-              backgroundGradientFrom: '#f9f9f9',
-              backgroundGradientTo: '#f9f9f9',
-              decimalPlaces: 0, // Aucun chiffre après la virgule
-              color: (opacity = 1) => `rgba(38, 110, 241, ${opacity})`,
-              labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-              style: {
+                labelColor: (opacity = 1) => {
+                  const hex = theme.text.replace('#', '');
+                  const r = parseInt(hex.substr(0, 2), 16);
+                  const g = parseInt(hex.substr(2, 2), 16);
+                  const b = parseInt(hex.substr(4, 2), 16);
+                  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+                },
+                style: {
+                  borderRadius: 16,
+                },
+                propsForDots: {
+                  r: '6',
+                  strokeWidth: '2',
+                  stroke: theme.primary,
+                },
+              }}
+              bezier
+              style={{
+                marginVertical: 8,
                 borderRadius: 16,
-              },
-              propsForDots: {
-                r: '6',
-                strokeWidth: '2',
-                stroke: '#266EF1',
-              },
-            }}
-            bezier
-            style={{
-              marginVertical: 8,
-              borderRadius: 16,
-            }}
-          />
+              }}
+            />
+          ) : (
+            <View style={styles.emptyChart}>
+              <FeatherIcon name="bar-chart-2" size={40} color={theme.textSecondary} />
+              <Text style={[styles.emptyChartText, { color: theme.textSecondary }]}>
+                Aucune mesure pour le moment.{'\n'}Ajoutez votre première mesure dans l'onglet « Mesurer ».
+              </Text>
+            </View>
+          )}
         </View>
 
-        {/* Boutons pour naviguer vers les autres pages sous forme d'icônes */}
-        <View style={styles.buttonsContainer}>
-          {/* Bouton Mon Profil */}
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Profile')}
-            style={styles.iconButton}>
-            <FeatherIcon name="user" size={24} color="#fff" />
-            <Text style={styles.iconButtonText}>Profil</Text>
-          </TouchableOpacity>
-
-          {/* Bouton pour la page de mesure de tension */}
-          <TouchableOpacity
-            onPress={() => navigation.navigate('MesureScreen')}
-            style={styles.iconButton}>
-            <FeatherIcon name="heart" size={24} color="#fff" />
-            <Text style={styles.iconButtonText}>Mesurer</Text>
-          </TouchableOpacity>
-
-          {/* Bouton pour accéder à l'historique des mesures */}
-          <TouchableOpacity
-            onPress={() => navigation.navigate('HistoriqueScreen')}
-            style={styles.iconButton}>
-            <FeatherIcon name="clock" size={24} color="#fff" />
-            <Text style={styles.iconButtonText}>Historique</Text>
-          </TouchableOpacity>
+        {/* Statistiques rapides */}
+        <View style={styles.statsContainer}>
+          <View style={[styles.statCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Dernière mesure</Text>
+            <Text style={[styles.statValue, { color: theme.text }]}>
+              {measurements.length > 0 
+                ? `${measurements[0].systolic}/${measurements[0].diastolic}` 
+                : 'Aucune'}
+            </Text>
+          </View>
+          
+          <View style={[styles.statCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Total mesures</Text>
+            <Text style={[styles.statValue, { color: theme.text }]}>{measurements.length}</Text>
+          </View>
         </View>
 
-      </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 60, // Espace pour la barre de navigation flottante
+  },
   container: {
     padding: 24,
-    flexGrow: 1,
-    flexShrink: 1,
-    flexBasis: 0,
+    minHeight: '100%',
   },
-  /** Action */
+  /** Actions */
   action: {
     width: 48,
     height: 48,
     borderRadius: 12,
     marginHorizontal: 8,
-    backgroundColor: '#e8f0f9',
     alignItems: 'center',
     justifyContent: 'center',
   },
   actionWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between',
     marginHorizontal: -8,
     marginBottom: 16,
+  },
+  leftActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  themeToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
   /** Logo */
   logoContainer: {
@@ -177,8 +224,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   logo: {
-    width: 150, // Taille réduite pour libérer de l'espace
-    height: 150, // Taille réduite pour libérer de l'espace
+    width: 120,
+    height: 120,
     resizeMode: 'contain',
   },
   /** Search */
@@ -195,13 +242,11 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 44,
-    backgroundColor: '#f0f6fb',
     paddingLeft: 44,
     paddingRight: 24,
     borderRadius: 12,
     fontSize: 15,
     fontWeight: '500',
-    color: '#222',
   },
   inputWrapper: {
     position: 'relative',
@@ -222,55 +267,74 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     borderWidth: 1,
-    backgroundColor: '#222',
-    borderColor: '#222',
+    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   btnText: {
-    fontSize: 17,
+    fontSize: 16,
     lineHeight: 24,
     fontWeight: '600',
-    color: '#fff',
   },
   /** Graphique */
   graphContainer: {
-    backgroundColor: '#f9f9f9',
     padding: 16,
-    borderRadius: 10,
+    borderRadius: 12,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#e8e8e8',
+    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   graphTitle: {
-    fontSize: 16, // Réduit la taille de la police
+    fontSize: 18,
     fontWeight: '600',
-    marginBottom: 10,
-    color: '#e74c3c',
+    marginBottom: 12,
     textAlign: 'center',
-    marginHorizontal: 10, // Ajoute une marge horizontale
   },
-  /** Boutons pour les pages */
-  buttonsContainer: {
-    marginTop: 24,
+  emptyChart: {
+    height: 200,
     alignItems: 'center',
-    flexDirection: 'row', // Permet aux boutons de s'aligner horizontalement
-    justifyContent: 'space-around', // Espacement égal entre les boutons
-  },
-  iconButton: {
-    backgroundColor: '#266EF1',
-    borderRadius: 8,
-    padding: 10,
-    alignItems: 'center',
-    flexDirection: 'column', // Colonne pour empiler l'icône et le texte
     justifyContent: 'center',
-    width: 80, // Largeur des boutons
+    gap: 12,
   },
-  iconButtonText: {
-    color: '#fff',
-    fontWeight: '600',
+  emptyChartText: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  /** Stats */
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  statCard: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginHorizontal: 4,
+    alignItems: 'center',
+    elevation: 1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  statLabel: {
     fontSize: 12,
-    marginTop: 4, // Ajoute un espace entre l'icône et le texte
+    fontWeight: '500',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    textAlign: 'center',
   },
 });

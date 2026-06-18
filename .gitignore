@@ -33,3 +33,9 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# secrets (do not commit)
+.env
+
+# Playwright MCP artifacts
+.playwright-mcp/
